@@ -34,9 +34,9 @@ namespace PMS.Models
 
         public int? ParentTaskID { get; set; }
 
-        //public virtual Task Parent { get; set; }
+        public virtual Task Parent { get; set; }
 
-        //public virtual ICollection<Task> Children { get; set; }
+        public virtual ICollection<Task> Children { get; set; }
 
         [Required]
         public int ProjectID { get; set; }

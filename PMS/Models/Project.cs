@@ -21,10 +21,8 @@ namespace PMS.Models
         public string Name { get; set; }
 
         [Required]
-        //[Column(TypeName = "datetime2")]
         public DateTime StartDate { get; set; }
 
-        //[Column(TypeName = "datetime2")]
         public DateTime? FinishDate { get; set; }
 
         [Required]

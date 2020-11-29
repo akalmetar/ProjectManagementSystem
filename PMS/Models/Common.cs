@@ -11,9 +11,9 @@ namespace PMS.Models
         public enum State
 
         {
-            Planned, 
-            inProgress, 
-            Completed
+            Planned = 1, 
+            inProgress = 2, 
+            Completed = 3
         }
 
     }

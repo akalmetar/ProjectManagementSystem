@@ -14,7 +14,7 @@ namespace PMS.Controllers.API
 {
     public class ProjectController : ApiController
     {
-        private ProjectRepository objProjRes = new ProjectRepository();
+        private ProjectRepository objProjRes;
 
         public ProjectController()
         {
@@ -23,7 +23,7 @@ namespace PMS.Controllers.API
 
         ~ProjectController()
         {
-            objProjRes.Dispose();
+            Dispose();
         }
 
         [HttpGet]
@@ -31,8 +31,7 @@ namespace PMS.Controllers.API
         [Route("api/GetProject")]
         public IHttpActionResult GetProjectList()
         {
-            objProjRes.GetProjectList();
-            return Ok(objProjRes.ProjectListObj);
+            return Ok(objProjRes.GetProjectList());
         }
 
         [HttpGet]
@@ -40,14 +39,14 @@ namespace PMS.Controllers.API
         [Route("api/GetProject/{id}")]
         public IHttpActionResult GetProject(int id)
         {
-            objProjRes.GetProject(id);
+            var ObjProj = objProjRes.GetProject(id);
 
-            if (objProjRes.ProjectObj == null)
+            if (ObjProj == null)
             {
                 return NotFound();
             }
 
-            return Ok(objProjRes.ProjectObj);
+            return Ok(ObjProj);
         }
 
         [HttpPost]
@@ -84,22 +83,21 @@ namespace PMS.Controllers.API
             return BadRequest();
         }
 
-        // DELETE: api/Students/5  
         [HttpDelete]
         [ResponseType(typeof(Project))]
         [Route("api/DeleteProject/{id}")]
         public IHttpActionResult DeleteProject(int id)
         {
-            objProjRes.GetProject(id);
+            var ObjProj = objProjRes.GetProject(id);
             
-            if (objProjRes.ProjectObj == null)
+            if (ObjProj == null)
             {
                 return NotFound();
             }
 
-            objProjRes.Delete(objProjRes.ProjectObj);
+            objProjRes.Delete(ObjProj);
  
-            return Ok(objProjRes.ProjectObj);
+            return Ok(ObjProj);
         }
 
     }

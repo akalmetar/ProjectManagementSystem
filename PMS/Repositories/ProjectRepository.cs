@@ -11,22 +11,26 @@ using System.Threading.Tasks;
 
 namespace PMS.Repositories
 {
-    class ProjectRepository: IDisposable
+    public class ProjectRepository : IDisposable
     {
-        ApplicationDBContext _context = new ApplicationDBContext();
+        private ApplicationDBContext _context;
 
-        public Project ProjectObj { get; set; } 
-
-        public IEnumerable<Project> ProjectListObj { get; set; }
-
-        public void GetProjectList()
+        public ProjectRepository()
         {
-            ProjectListObj = _context.Projects.Where(m => m.IsSubProject == false).Include(k => k.Children).ToList();
+            _context = new ApplicationDBContext();
+
         }
 
-        public void GetProject(int id)
+        public IEnumerable<Project> GetProjectList()
         {
-            ProjectObj = _context.Projects.Where(m => m.ProjectID == id).Include(k => k.Children).FirstOrDefault();
+            return _context.Projects.Where(m => m.IsSubProject == false)
+                           .Include(k => k.Children).ToList();
+        }
+
+        public Project GetProject(int id)
+        {
+            return _context.Projects.Where(m => m.ProjectID == id)
+                           .Include(k => k.Children).FirstOrDefault();
         }
 
         public void Insert(Project objProject)
@@ -55,16 +59,20 @@ namespace PMS.Repositories
 
         public void Delete(Project objProject)
         {
-            IEnumerable<Project> objProjectDelete = _context.Projects.Where(x => x.ProjectID == objProject.ProjectID || 
-                                                                            x.ParentProjectID == objProject.ProjectID);
-            foreach(Project p in objProjectDelete)
-                _context.Projects.Remove(p);
+            IEnumerable<Models.Task> objTaskDelete = _context.Tasks.Where(x => x.ProjectID == objProject.ProjectID);
+            foreach (Models.Task p in objTaskDelete)
+                _context.Tasks.Remove(p);
+            _context.SaveChanges();
 
+
+            IEnumerable<Project> objProjectDelete = _context.Projects.Where(x => x.ProjectID == objProject.ProjectID ||
+                                                                            x.ParentProjectID == objProject.ProjectID);
+            foreach (Project p in objProjectDelete)
+                _context.Projects.Remove(p);
             _context.SaveChanges();
         }
 
-
-        protected void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
             if (disposing)
             {
