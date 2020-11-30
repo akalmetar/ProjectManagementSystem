@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace PMS.Repositories
 {
-    public class ProjectRepository : IDisposable
+    public class ProjectRepository
     {
         private ApplicationDBContext _context;
 
@@ -21,18 +21,29 @@ namespace PMS.Repositories
 
         }
 
+        /// <summary>
+        /// Function to fetch a list of project (all the projects)
+        /// </summary>
         public IEnumerable<Project> GetProjectList()
         {
             return _context.Projects.Where(m => m.IsSubProject == false)
                            .Include(k => k.Children).ToList();
         }
 
+        /// <summary>
+        /// Function to Fetch a single project
+        /// </summary>
+        /// <param name="id">ID of the project that has to be fetched</param>
         public Project GetProject(int id)
         {
             return _context.Projects.Where(m => m.ProjectID == id)
                            .Include(k => k.Children).FirstOrDefault();
         }
 
+        /// <summary>
+        /// Function to Insert project
+        /// </summary>
+        /// <param name="objProject">Object of project which is to be inserted</param>
         public void Insert(Project objProject)
         {
             if (_context.Database.Exists())
@@ -42,6 +53,10 @@ namespace PMS.Repositories
             }
         }
 
+        /// <summary>
+        /// Function to update project
+        /// </summary>
+        /// <param name="objProject">Object of project which is to be updated</param>
         public void Update(Project objProject)
         {
             Project objProjectUpdate = _context.Projects.FirstOrDefault(x => x.ProjectID == objProject.ProjectID);
@@ -54,9 +69,14 @@ namespace PMS.Repositories
             objProjectUpdate.IsSubProject = objProject.IsSubProject;
             objProjectUpdate.ParentProjectID = objProject.ParentProjectID;
 
+            _context.ChangeTracker.DetectChanges();
             _context.SaveChanges();
         }
 
+        /// <summary>
+        /// Function to delete project and its child elements (sub project, task and subtask)
+        /// </summary>
+        /// <param name="objProject">Object of project which is to be deleted</param>
         public void Delete(Project objProject)
         {
             IEnumerable<Models.Task> objTaskDelete = _context.Tasks.Where(x => x.ProjectID == objProject.ProjectID);
@@ -72,22 +92,5 @@ namespace PMS.Repositories
             _context.SaveChanges();
         }
 
-        private void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                if (_context != null)
-                {
-                    _context.Dispose();
-                    _context = null;
-                }
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
     }
 }

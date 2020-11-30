@@ -8,24 +8,37 @@ using System.Web;
 
 namespace PMS.Repositories
 {
-    public class TaskRepository : IDisposable
+    public class TaskRepository
     {
-        private ApplicationDBContext _context = new ApplicationDBContext();
+        private ApplicationDBContext _context;
 
-        public Task TaskObj { get; set; }
-
-        public IEnumerable<Task> TaskListObj { get; set; }
-
-        public void GetTaskList()
+        public TaskRepository()
         {
-            TaskListObj = _context.Tasks.Where(m => m.IsSubTask == false).Include(k => k.Children).ToList();
+            _context = new ApplicationDBContext();
+
         }
 
-        public void GetTask(int id)
+        /// <summary>
+        /// Function to fetch a list of tasks (all the tasks)
+        /// </summary>
+        public IEnumerable<Task> GetTaskList()
         {
-            TaskObj = _context.Tasks.Where(m => m.TaskID == id).Include(k => k.Children).FirstOrDefault();
+            return _context.Tasks.Where(m => m.IsSubTask == false).Include(k => k.Children).ToList();
         }
 
+        /// <summary>
+        /// Function to Fetch a single task
+        /// </summary>
+        /// <param name="id">ID of the Task that has to be fetched</param>
+        public Task GetTask(int id)
+        {
+            return _context.Tasks.Where(m => m.TaskID == id).Include(k => k.Children).FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Function to insert task
+        /// </summary>
+        /// <param name="objTask">Object of Task which is to be inserted</param>
         public void Insert(Task objTask)
         {
             if (_context.Database.Exists())
@@ -35,6 +48,10 @@ namespace PMS.Repositories
             }
         }
 
+        /// <summary>
+        /// Function to update task
+        /// </summary>
+        /// <param name="objTask">Object of Task which is to be updated</param>
         public void Update(Task objTask)
         {
             Task objTaskUpdate = _context.Tasks.FirstOrDefault(x => x.TaskID == objTask.TaskID);
@@ -51,6 +68,10 @@ namespace PMS.Repositories
             _context.SaveChanges();
         }
 
+        /// <summary>
+        /// Function to delete task and its sub task
+        /// </summary>
+        /// <param name="objTask">Object of Task which is to be deleted</param>
         public void Delete(Task objTask)
         {
             IEnumerable<Task> objTaskDelete = _context.Tasks.Where(x => x.TaskID == objTask.TaskID ||
@@ -61,22 +82,5 @@ namespace PMS.Repositories
             _context.SaveChanges();
         }
 
-        private void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                if (_context != null)
-                {
-                    _context.Dispose();
-                    _context = null;
-                }
-            }
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
     }
 }
