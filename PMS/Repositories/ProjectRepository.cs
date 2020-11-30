@@ -46,7 +46,9 @@ namespace PMS.Repositories
         public IEnumerable<Project> GetProjectListByDate(DateTime date, Common.State state)
         {
             return _context.Projects.Where(m => (m.State == state) && (m.StartDate == date))
-                           .Include(k => k.Children).ToList();
+                           .Include(k => k.Children)
+                           .Include(k => k.task)
+                           .ToList();
         }
 
 
