@@ -5,7 +5,6 @@ using System.Net;
 using System.Web.Http;
 using PMS.Models;
 using System.Web.Http.Results;
-using Ninject;
 
 namespace PMS.Tests
 {
