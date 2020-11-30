@@ -9,6 +9,7 @@ using System.Web.Http;
 using System.Data.Entity;
 using PMS.Repositories;
 using System.Web.Http.Description;
+using System.Globalization;
 
 namespace PMS.Controllers.API
 {
@@ -132,6 +133,32 @@ namespace PMS.Controllers.API
             {
                 //Log error
                 throw new Exception("Error Occured while deteting a project. ID = " + id, e);
+            }
+        }
+
+        [HttpGet]
+        [ResponseType(typeof(IEnumerable<Project>))]
+        [Route("api/GetDetailsForInprogress/{dateString}")]
+        public IHttpActionResult GetDetailsForInprogress(string dateString)
+        {
+            DateTime dt;
+
+            try
+            {
+                if (DateTime.TryParseExact(dateString, "dd-MM-yyyy", CultureInfo.InvariantCulture,
+                    DateTimeStyles.None, out dt))
+                {
+                    dt = Convert.ToDateTime(dateString);
+
+                    return Ok(objProjRes.GetProjectListByDate(dt, Common.State.inProgress));
+                }
+
+                return NotFound();
+            }
+            catch (Exception e)
+            {
+                //Log error
+                throw new Exception("Error Occured while fetching project details.", e);
             }
         }
 

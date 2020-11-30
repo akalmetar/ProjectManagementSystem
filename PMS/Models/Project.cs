@@ -37,5 +37,7 @@ namespace PMS.Models
 
         public virtual ICollection<Project> Children { get; set; }
 
+        public virtual ICollection<Task> task { get; set; }
+
     }
 }

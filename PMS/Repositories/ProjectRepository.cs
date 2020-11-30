@@ -41,6 +41,16 @@ namespace PMS.Repositories
         }
 
         /// <summary>
+        /// Function to fetch a list of project (all the projects)
+        /// </summary>
+        public IEnumerable<Project> GetProjectListByDate(DateTime date, Common.State state)
+        {
+            return _context.Projects.Where(m => (m.State == state) && (m.StartDate == date))
+                           .Include(k => k.Children).ToList();
+        }
+
+
+        /// <summary>
         /// Function to Insert project
         /// </summary>
         /// <param name="objProject">Object of project which is to be inserted</param>
