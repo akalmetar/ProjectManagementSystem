@@ -19,18 +19,20 @@ namespace PMS.Controllers.API
             objTaskRes = new TaskRepository();
         }
 
-        ~TaskController()
-        {
-            objTaskRes.Dispose();
-        }
-
         [HttpGet]
         [ResponseType(typeof(IEnumerable<Task>))]
         [Route("api/GetTask")]
         public IHttpActionResult GetTaskList()
         {
-            objTaskRes.GetTaskList();
-            return Ok(objTaskRes.TaskListObj);
+            try
+            {
+                return Ok(objTaskRes.GetTaskList());
+            }
+            catch (Exception e)
+            {
+                //Log error
+                throw new Exception("Error Occured while fetching task details.", e);
+            }
         }
 
         [HttpGet]
@@ -38,65 +40,97 @@ namespace PMS.Controllers.API
         [Route("api/GetTask/{id}")]
         public IHttpActionResult GetTask(int id)
         {
-            objTaskRes.GetTask(id);
-
-            if (objTaskRes.TaskObj == null)
+            try
             {
-                return NotFound();
-            }
+                var ObjTask = objTaskRes.GetTask(id);
 
-            return Ok(objTaskRes.TaskObj);
+                if (ObjTask == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(ObjTask);
+            }
+            catch (Exception e)
+            {
+                //Log error
+                throw new Exception("Error Occured while fetching a task. ID = " + id, e);
+            }
         }
 
         [HttpPost]
         [Route("api/CreateNewTask")]
         public IHttpActionResult CreateNewTask(Task objTask)
         {
-            if (!ModelState.IsValid)
-                return BadRequest("Invalid data.");
-
-            objTaskRes.Insert(objTask);
-
-            return CreatedAtRoute("DefaultApi", new
+            try
             {
-                TaskID = objTask.TaskID
-            }, objTask);
+                if (!ModelState.IsValid)
+                    return BadRequest("Invalid data.");
+
+                objTaskRes.Insert(objTask);
+
+                return CreatedAtRoute("DefaultApi", new
+                {
+                    TaskID = objTask.TaskID
+                }, objTask);
+            }
+            catch (Exception e)
+            {
+                //Log error
+                throw new Exception("Error Occured while creating a new task.", e);
+            }
         }
 
         [HttpPut]
         [Route("api/UpdateTask")]
         public IHttpActionResult UpdateTask(Task objTask)
         {
-            if (objTask != null)
+            try
             {
-                if (!ModelState.IsValid)
-                    return BadRequest("Invalid data.");
-                else
+                if (objTask != null)
                 {
-                    objTaskRes.Update(objTask);
+                    if (!ModelState.IsValid)
+                        return BadRequest("Invalid data.");
+                    else
+                    {
+                        objTaskRes.Update(objTask);
 
-                    return Content(HttpStatusCode.Accepted, objTask);
+                        return Content(HttpStatusCode.Accepted, objTask);
+                    }
                 }
-            }
 
-            return BadRequest();
+                return BadRequest();
+            }
+            catch (Exception e)
+            {
+                //Log error
+                throw new Exception("Error Occured while updating the task details. ID = " + objTask.TaskID, e);
+            }
         }
- 
+
         [HttpDelete]
         [ResponseType(typeof(Task))]
         [Route("api/DeleteTask/{id}")]
         public IHttpActionResult DeleteTask(int id)
         {
-            objTaskRes.GetTask(id);
-
-            if (objTaskRes.TaskObj == null)
+            try
             {
-                return NotFound();
+                var ObjTask = objTaskRes.GetTask(id);
+
+                if (ObjTask == null)
+                {
+                    return NotFound();
+                }
+
+                objTaskRes.Delete(ObjTask);
+
+                return Ok(ObjTask);
             }
-
-            objTaskRes.Delete(objTaskRes.TaskObj);
-
-            return Ok(objTaskRes.TaskObj);
+            catch (Exception e)
+            {
+                //Log error
+                throw new Exception("Error Occured while deteting a task. ID = " + id, e);
+            }
         }
     }
 }

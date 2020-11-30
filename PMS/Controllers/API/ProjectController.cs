@@ -21,17 +21,20 @@ namespace PMS.Controllers.API
             objProjRes = new ProjectRepository();
         }
 
-        ~ProjectController()
-        {
-            Dispose();
-        }
-
         [HttpGet]
         [ResponseType(typeof(IEnumerable<Project>))]
         [Route("api/GetProject")]
         public IHttpActionResult GetProjectList()
         {
-            return Ok(objProjRes.GetProjectList());
+            try
+            {
+                return Ok(objProjRes.GetProjectList());
+            }
+            catch (Exception e)
+            {
+                //Log error
+                throw new Exception("Error Occured while fetching project details.", e);
+            }
         }
 
         [HttpGet]
@@ -39,48 +42,72 @@ namespace PMS.Controllers.API
         [Route("api/GetProject/{id}")]
         public IHttpActionResult GetProject(int id)
         {
-            var ObjProj = objProjRes.GetProject(id);
-
-            if (ObjProj == null)
+            try
             {
-                return NotFound();
-            }
+                var ObjProj = objProjRes.GetProject(id);
 
-            return Ok(ObjProj);
+                if (ObjProj == null)
+                {
+                    return NotFound();
+                }
+
+                return Ok(ObjProj);
+            }
+            catch (Exception e)
+            {
+                //Log error
+                throw new Exception("Error Occured while fetching a project. ID = " + id, e);
+            }
         }
 
         [HttpPost]
         [Route("api/CreateNewProject")]
         public IHttpActionResult CreateNewProject(Project objProj)
         {
-            if (!ModelState.IsValid)
-                return BadRequest("Invalid data.");
-
-            objProjRes.Insert(objProj);
-
-            return CreatedAtRoute("DefaultApi", new
+            try
             {
-                ProjectID = objProj.ProjectID
-            }, objProj);
+                if (!ModelState.IsValid)
+                    return BadRequest("Invalid data.");
+
+                objProjRes.Insert(objProj);
+
+                return CreatedAtRoute("DefaultApi", new
+                {
+                    ProjectID = objProj.ProjectID
+                }, objProj);
+            }
+            catch (Exception e)
+            {
+                //Log error
+                throw new Exception("Error Occured while creating a new project.", e);
+            }
         }
 
         [HttpPut]
         [Route("api/UpdateProject")]
         public IHttpActionResult UpdateProject(Project objProj)
         {
-            if (objProj != null)
+            try
             {
-                if (!ModelState.IsValid)
-                    return BadRequest("Invalid data.");
-                else
+                if (objProj != null)
                 {
-                    objProjRes.Update(objProj);
+                    if (!ModelState.IsValid)
+                        return BadRequest("Invalid data.");
+                    else
+                    {
+                        objProjRes.Update(objProj);
 
-                    return Content(HttpStatusCode.Accepted, objProj);
+                        return Content(HttpStatusCode.Accepted, objProj);
+                    }
                 }
-            }
 
-            return BadRequest();
+                return BadRequest();
+            }
+            catch (Exception e)
+            {
+                //Log error
+                throw new Exception("Error Occured while updating the project details. ID = " + objProj.ProjectID, e);
+            }
         }
 
         [HttpDelete]
@@ -88,16 +115,24 @@ namespace PMS.Controllers.API
         [Route("api/DeleteProject/{id}")]
         public IHttpActionResult DeleteProject(int id)
         {
-            var ObjProj = objProjRes.GetProject(id);
-            
-            if (ObjProj == null)
+            try
             {
-                return NotFound();
-            }
+                var ObjProj = objProjRes.GetProject(id);
 
-            objProjRes.Delete(ObjProj);
- 
-            return Ok(ObjProj);
+                if (ObjProj == null)
+                {
+                    return NotFound();
+                }
+
+                objProjRes.Delete(ObjProj);
+
+                return Ok(ObjProj);
+            }
+            catch (Exception e)
+            {
+                //Log error
+                throw new Exception("Error Occured while deteting a project. ID = " + id, e);
+            }
         }
 
     }
