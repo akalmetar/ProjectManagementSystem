@@ -5,45 +5,34 @@ using System.Net;
 using System.Web.Http;
 using PMS.Models;
 using System.Web.Http.Results;
+using Ninject;
 
 namespace PMS.Tests
 {
     [TestClass]
     public class ProjectTest
     {
-        [TestMethod]
-        public void ProjectGetById()
-        {
-            // Set up Prerequisites   
-            var controller = new ProjectController();
-            var projectList = controller.GetProject(4);
-
-            var contentResult = projectList as OkNegotiatedContentResult<Project>;
-            Assert.IsNotNull(contentResult);
-            Assert.IsNotNull(contentResult.Content);
-            Assert.AreEqual(4, contentResult.Content.ProjectID);
-        }
+        #region TestCasesForInsertOperation
 
         [TestMethod]
-        public void AddProjectTest()
+        public void AddInitialProjectTest()
         {
-            // Arrange  
             var controller = new ProjectController();
             Project objProject = new Project
             {
-                Code = "C:\\\\MyProjects\\ProjParent5",
-                Name = "ProjParent5",
+                Code = "C:\\\\MyProjects\\ProjParent1",
+                Name = "ProjParent1",
                 StartDate = DateTime.Now.Date,
                 FinishDate = null,
-                State = Common.State.Completed,
+                State = Common.State.Planned,
                 IsSubProject = false,
                 ParentProjectID = null
             };
-            // Act  
+
             IHttpActionResult actionResult = controller.CreateNewProject(objProject);
 
             var createdResult = actionResult as CreatedAtRouteNegotiatedContentResult<Project>;
-            // Assert  
+
             Assert.IsNotNull(createdResult);
             Assert.AreEqual("DefaultApi", createdResult.RouteName);
             Assert.IsNotNull(createdResult.RouteValues["ProjectID"]);
@@ -51,70 +40,68 @@ namespace PMS.Tests
         }
 
         [TestMethod]
-        public void UpdateProjectTest()
+        [ExpectedException(typeof(System.Exception))]
+        public void AddSubProjectWithouParentProjectIDTest()
         {
-            // Arrange  
             var controller = new ProjectController();
             Project objProject = new Project
             {
-                ProjectID = 36,
-                Code = "C:\\\\MyProjects\\ProjParent3",
-                Name = "ProjParent3",
+                Code = "C:\\\\MyProjects\\ProjParent1\\SubProject1",
+                Name = "SubProject1",
                 StartDate = DateTime.Now.Date,
                 FinishDate = null,
-                State = Common.State.Completed,
+                State = Common.State.Planned,
                 IsSubProject = true,
-                ParentProjectID = 35
+                ParentProjectID = null
             };
-            // Act  
-            IHttpActionResult actionResult = controller.UpdateProject(objProject);
 
-            var contentResult = actionResult as NegotiatedContentResult<Project>;
-            // Assert  
-            Assert.IsNotNull(contentResult);
-            Assert.AreEqual(HttpStatusCode.Accepted, contentResult.StatusCode);
-            Assert.IsNotNull(contentResult.Content);
-            Assert.AreEqual(contentResult.Content.Name, "ProjParent3");
+            IHttpActionResult actionResult = controller.CreateNewProject(objProject);
+
+            var createdResult = actionResult as CreatedAtRouteNegotiatedContentResult<Project>;
+
         }
 
         [TestMethod]
-        public void DeleteProjectTest()
+        public void AddSubProjectWithParentProjectIDTest()
         {
             var controller = new ProjectController();
-            IHttpActionResult actionResult = controller.DeleteProject(35);
-            var contentResult = actionResult as OkNegotiatedContentResult<Project>;        
-            Assert.IsNotNull(contentResult);
+            Project objProject = new Project
+            {
+                Code = "C:\\\\MyProjects\\ProjParent1\\SubProject1",
+                Name = "SubProject1",
+                StartDate = DateTime.Now.Date,
+                FinishDate = null,
+                State = Common.State.Planned,
+                IsSubProject = true,
+                ParentProjectID = 1
+            };
+
+            IHttpActionResult actionResult = controller.CreateNewProject(objProject);
+
+            var createdResult = actionResult as CreatedAtRouteNegotiatedContentResult<Project>;
+
+            Assert.IsNotNull(createdResult);
+            Assert.AreEqual("DefaultApi", createdResult.RouteName);
+            Assert.IsNotNull(createdResult.RouteValues["ProjectID"]);
+            Assert.AreNotEqual(0, createdResult.RouteValues["ProjectID"]);
         }
 
         [TestMethod]
-        public void TaskGetById()
+        public void AddInitialTaskTest()
         {
-            // Set up Prerequisites   
-            var controller = new TaskController();
-            var projectList = controller.GetTask(2);
-
-            var contentResult = projectList as OkNegotiatedContentResult<Task>;
-            Assert.IsNotNull(contentResult);
-            Assert.IsNotNull(contentResult.Content);
-            Assert.AreEqual(2, contentResult.Content.TaskID);
-        }
-
-        [TestMethod]
-        public void AddTaskTest()
-        {  
             var controller = new TaskController();
             Task objTask = new Task
             {
-                Name = "Task3.2",
-                Description = "This is task 3.2",
+                Name = "Task1",
+                Description = "This is task 1",
                 StartDate = DateTime.Now.Date,
                 FinishDate = null,
                 State = Common.State.inProgress,
-                IsSubTask = true,
-                ParentTaskID = 3,
-                ProjectID = 36
+                IsSubTask = false,
+                ParentTaskID = null,
+                ProjectID = 1
             };
- 
+
             IHttpActionResult actionResult = controller.CreateNewTask(objTask);
 
             var createdResult = actionResult as CreatedAtRouteNegotiatedContentResult<Task>;
@@ -126,38 +113,223 @@ namespace PMS.Tests
         }
 
         [TestMethod]
-        public void UpdateTaskTest()
-        { 
+        [ExpectedException(typeof(System.Exception))]
+        public void AddTaskWithoutProjectIDTest()
+        {
             var controller = new TaskController();
             Task objTask = new Task
             {
-                TaskID = 9,
-                Name = "Task3.1",
-                Description = "This is task 3.1",
+                Name = "Task2",
+                Description = "This is task 2",
+                StartDate = DateTime.Now.Date,
+                FinishDate = null,
+                State = Common.State.inProgress,
+                IsSubTask = false,
+                ParentTaskID = null,
+                ProjectID = 0
+                //Cannot accept null as we have defined this parameter as mandatory
+            };
+
+            IHttpActionResult actionResult = controller.CreateNewTask(objTask);
+
+            var createdResult = actionResult as CreatedAtRouteNegotiatedContentResult<Task>;
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(System.Exception))]
+        public void AddSubTaskWithoutParentTaskIDTest()
+        {
+            var controller = new TaskController();
+            Task objTask = new Task
+            {
+                Name = "Task2",
+                Description = "This is task 2",
+                StartDate = DateTime.Now.Date,
+                FinishDate = null,
+                State = Common.State.inProgress,
+                IsSubTask = true,
+                ParentTaskID = null,
+                ProjectID = 1
+            };
+
+            IHttpActionResult actionResult = controller.CreateNewTask(objTask);
+
+            var createdResult = actionResult as CreatedAtRouteNegotiatedContentResult<Task>;
+
+            Assert.IsNotNull(createdResult);
+            Assert.AreEqual("DefaultApi", createdResult.RouteName);
+            Assert.IsNotNull(createdResult.RouteValues["TaskID"]);
+            Assert.AreNotEqual(0, createdResult.RouteValues["TaskID"]);
+        }
+
+        [TestMethod]
+        public void AddSubTaskWithParentTaskIDTest()
+        {
+            var controller = new TaskController();
+            Task objTask = new Task
+            {
+                Name = "SubTask1",
+                Description = "This is sub task 1",
+                StartDate = DateTime.Now.Date,
+                FinishDate = null,
+                State = Common.State.inProgress,
+                IsSubTask = true,
+                ParentTaskID = 1,
+                ProjectID = 1
+            };
+
+            IHttpActionResult actionResult = controller.CreateNewTask(objTask);
+
+            var createdResult = actionResult as CreatedAtRouteNegotiatedContentResult<Task>;
+
+            Assert.IsNotNull(createdResult);
+            Assert.AreEqual("DefaultApi", createdResult.RouteName);
+            Assert.IsNotNull(createdResult.RouteValues["TaskID"]);
+            Assert.AreNotEqual(0, createdResult.RouteValues["TaskID"]);
+        }
+
+        [TestMethod]
+        [ExpectedException(typeof(System.Exception))]
+        public void AddSubTaskWithDifferentProjectIDforParentTaskIDwithDifferentProjectIDTest()
+        {
+            var controller = new TaskController();
+            Task objTask = new Task
+            {
+                Name = "SubTask1",
+                Description = "This is sub task 1",
+                StartDate = DateTime.Now.Date,
+                FinishDate = null,
+                State = Common.State.inProgress,
+                IsSubTask = true,
+                ParentTaskID = 1,
+                ProjectID = 2
+
+                //system should throw an error
+                //because Parent Task Project is different and Sub Task project is different
+                //cannot insert sub task 
+            };
+
+            IHttpActionResult actionResult = controller.CreateNewTask(objTask);
+
+            var createdResult = actionResult as CreatedAtRouteNegotiatedContentResult<Task>;
+
+            Assert.IsNotNull(createdResult);
+            Assert.AreEqual("DefaultApi", createdResult.RouteName);
+            Assert.IsNotNull(createdResult.RouteValues["TaskID"]);
+            Assert.AreNotEqual(0, createdResult.RouteValues["TaskID"]);
+        }
+
+
+        #endregion
+
+        #region TestCasesForFetchingRecords
+
+        [TestMethod]
+        public void ProjectGetById()
+        {
+            var controller = new ProjectController();
+            var projectList = controller.GetProject(4);
+
+            var contentResult = projectList as OkNegotiatedContentResult<Project>;
+
+            Assert.IsNotNull(contentResult);
+            Assert.IsNotNull(contentResult.Content);
+            Assert.AreEqual(4, contentResult.Content.ProjectID);
+        }
+
+        [TestMethod]
+        public void TaskGetById()
+        {
+            var controller = new TaskController();
+            var projectList = controller.GetTask(2);
+
+            var contentResult = projectList as OkNegotiatedContentResult<Task>;
+            Assert.IsNotNull(contentResult);
+            Assert.IsNotNull(contentResult.Content);
+            Assert.AreEqual(2, contentResult.Content.TaskID);
+        }
+
+        #endregion
+
+        #region TestCasesForUpdateOperation
+
+        [TestMethod]
+        public void UpdateProjectWithoutSubprojectASStateEqualtoCompletedTest()
+        {
+            var controller = new ProjectController();
+            Project objProject = new Project
+            {
+                ProjectID = 2,
+                Code = "C:\\\\MyProjects\\ProjParent1\\SubProject1",
+                Name = "SubProject1",
                 StartDate = DateTime.Now.Date,
                 FinishDate = DateTime.Now.Date,
                 State = Common.State.Completed,
-                IsSubTask = true,
-                ParentTaskID = 3,
-                ProjectID = 36
+                IsSubProject = true,
+                ParentProjectID = 1
             };
- 
-            IHttpActionResult actionResult = controller.UpdateTask(objTask);
-            var contentResult = actionResult as NegotiatedContentResult<Task>;
- 
+
+            IHttpActionResult actionResult = controller.UpdateProject(objProject);
+            var contentResult = actionResult as NegotiatedContentResult<Project>;
+
             Assert.IsNotNull(contentResult);
             Assert.AreEqual(HttpStatusCode.Accepted, contentResult.StatusCode);
             Assert.IsNotNull(contentResult.Content);
             Assert.AreEqual(contentResult.Content.State, Common.State.Completed);
         }
 
+
+        [TestMethod]
+        public void UpdateTaskTest()
+        {
+            var controller = new TaskController();
+            Task objTask = new Task
+            {
+                TaskID = 2,
+                Name = "SubTask1",
+                Description = "This is sub task 1",
+                StartDate = DateTime.Now.Date,
+                FinishDate = DateTime.Now.Date,
+                State = Common.State.Completed,
+                IsSubTask = true,
+                ParentTaskID = 1,
+                ProjectID = 1
+            };
+
+            IHttpActionResult actionResult = controller.UpdateTask(objTask);
+            var contentResult = actionResult as NegotiatedContentResult<Task>;
+
+            Assert.IsNotNull(contentResult);
+            Assert.AreEqual(HttpStatusCode.Accepted, contentResult.StatusCode);
+            Assert.IsNotNull(contentResult.Content);
+            Assert.AreEqual(contentResult.Content.State, Common.State.Completed);
+        }
+
+        #endregion
+
+        #region TestCasesForDeleteOperation
+
+        [TestMethod]
+        public void DeleteProjectTest()
+        {
+            var controller = new ProjectController();
+            IHttpActionResult actionResult = controller.DeleteProject(1);
+            var contentResult = actionResult as OkNegotiatedContentResult<Project>;
+            Assert.IsNotNull(contentResult);
+        }
+
         [TestMethod]
         public void DeleteTaskTest()
         {
             var controller = new TaskController();
-            IHttpActionResult actionResult = controller.DeleteTask(10);
+            IHttpActionResult actionResult = controller.DeleteTask(2);
             var contentResult = actionResult as OkNegotiatedContentResult<Task>;
             Assert.IsNotNull(contentResult);
         }
+
+
+        #endregion
+
+        
     }
 }
