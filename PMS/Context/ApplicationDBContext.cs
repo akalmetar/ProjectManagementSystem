@@ -14,8 +14,8 @@ namespace PMS.Context
 
         }
 
-        public DbSet<Project> Projects { get; set; } // My domain models
-        public DbSet<Task> Tasks { get; set; }// My domain models
+        public DbSet<Project> Projects { get; set; } 
+        public DbSet<Task> Tasks { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -33,6 +33,7 @@ namespace PMS.Context
                      .Delete(d => d.HasName("[dbo].[SP_DELETE_TASK]"))
             );
         }
+
 
     }
 }
